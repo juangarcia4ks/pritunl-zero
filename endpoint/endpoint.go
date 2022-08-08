@@ -456,6 +456,14 @@ func (e *Endpoint) InsertDoc(db *database.Database,
 		}
 	}
 
+	alerts := doc.CheckAlerts(e.Alerts)
+	if alerts != nil && len(alerts) > 0 {
+		for _, alrt := range alerts {
+			go alert.New(e.Roles, e.Id, e.Name, alrt.Resource,
+				alrt.Message, alrt.Level, alrt.Frequency)
+		}
+	}
+
 	return
 }
 
@@ -497,7 +505,7 @@ func (e *Endpoint) Insert(db *database.Database) (err error) {
 
 func (e *Endpoint) GetData(c context.Context, db *database.Database,
 	resource string, start, end time.Time, interval time.Duration) (
-	data interface{}, err error) {
+	data endpoints.ChartData, err error) {
 
 	data, err = endpoints.GetChart(c, db, e.Id, resource,
 		start, end, interval)
